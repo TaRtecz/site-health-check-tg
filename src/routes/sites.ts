@@ -1,13 +1,14 @@
 import express from "express";
-import { getAllSites, getAllStatuses, createSite, updateSite, deleteSite } from "../services/siteService.js";
-import { startCronForSite, stopCronForSite, restartCronForSite } from "../services/cronService.js";
-import { sendUpMessage, sendDownMessage } from "../services/botService.js";
-import { getAllLogs, getLogsBySite } from "../services/logService.js";
+import { getAllSites, getAllStatuses, createSite, updateSite, deleteSite } from "../services/siteService";
+import { startCronForSite, stopCronForSite, restartCronForSite } from "../services/cronService";
+import { sendUpMessage, sendDownMessage } from "../services/botService";
+import { getAllLogs, getLogsBySite } from "../services/logService";
+import { Site } from "../entities/Site";
 
 const router = express.Router();
-let siteStatusCache = {};
+const siteStatusCache: Record<string, boolean> = {};
 
-function onStatusChange(site, isUp) {
+function onStatusChange(site: Site, isUp: boolean) {
   if (isUp) {
     sendUpMessage(site);
   } else {
@@ -38,29 +39,29 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { name, url, cronInterval, enabled } = req.body;
-  const site = await updateSite(id, { name, url, cronInterval, enabled });
+  const site = await updateSite(Number(id), { name, url, cronInterval, enabled });
   restartCronForSite(site, site.cronInterval, siteStatusCache, onStatusChange);
   res.json(site);
 });
 
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
-  await deleteSite(id);
-  stopCronForSite(id);
+  await deleteSite(Number(id));
+  stopCronForSite(Number(id));
   res.status(204).send();
 });
 
 // Логи
 router.get("/logs", async (req, res) => {
   const { limit, offset, status } = req.query;
-  const logs = await getAllLogs({ limit: Number(limit) || 100, offset: Number(offset) || 0, status });
+  const logs = await getAllLogs({ limit: Number(limit) || 100, offset: Number(offset) || 0, status: status as string });
   res.json(logs);
 });
 
 router.get("/:id/logs", async (req, res) => {
   const { id } = req.params;
   const { limit, offset, status } = req.query;
-  const logs = await getLogsBySite(id, { limit: Number(limit) || 100, offset: Number(offset) || 0, status });
+  const logs = await getLogsBySite(Number(id), { limit: Number(limit) || 100, offset: Number(offset) || 0, status: status as string });
   res.json(logs);
 });
 

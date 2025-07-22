@@ -2,11 +2,11 @@
   "name": "site-health-check-service",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js",
-    "cli": "node cli.js",
+    "dev": "nodemon --exec \"node --import ts-node/register\" index.ts",
+    "start": "node --import ts-node/register index.ts",
+    "cli": "node --loader ts-node/esm cli.ts",
     "typeorm": "typeorm-ts-node-esm",
     "format": "prettier --write ."
   },
@@ -20,9 +20,16 @@
     "express": "^5.1.0",
     "inquirer": "^12.8.2",
     "node-cron": "^4.2.1",
-    "telegraf": "^4.16.3",
+    "nodemon": "^3.1.0",
     "pg": "^8.11.3",
-    "typeorm": "^0.3.17",
-    "nodemon": "^3.1.0"
+    "telegraf": "^4.16.3",
+    "typeorm": "^0.3.17"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.11.30",
+    "@types/node-cron": "^3.0.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }

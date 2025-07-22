@@ -3,11 +3,11 @@ import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
 @Entity()
 export class SiteStatus extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id;
+  id!: number;
 
   @Column()
-  siteId;
+  siteId!: number;
 
   @Column()
-  isUp;
+  isUp!: boolean;
 } 
