@@ -1,7 +1,7 @@
 import { DataSource } from "typeorm";
-import { Site } from "../entities/Site.js";
-import { SiteStatus } from "../entities/SiteStatus.js";
-import { Log } from "../entities/Log.js";
+import { Site } from "../entities/Site";
+import { SiteStatus } from "../entities/SiteStatus";
+import { Log } from "../entities/Log";
 
 export const AppDataSource = new DataSource({
   type: "postgres",

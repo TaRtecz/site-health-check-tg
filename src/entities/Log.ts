@@ -3,14 +3,14 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity } 
 @Entity()
 export class Log extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id;
+  id!: number;
 
   @Column()
-  siteId;
+  siteId!: number;
 
   @Column()
-  status;
+  status!: string;
 
   @CreateDateColumn()
-  createdAt;
+  createdAt!: Date;
 } 

@@ -3,17 +3,17 @@ import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
 @Entity()
 export class Site extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id;
+  id!: number;
 
   @Column()
-  name;
+  name!: string;
 
   @Column()
-  url;
+  url!: string;
 
   @Column({ default: '*/5 * * * *' })
-  cronInterval;
+  cronInterval!: string;
 
   @Column({ default: true })
-  enabled;
+  enabled!: boolean;
 } 
