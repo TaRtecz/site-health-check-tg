@@ -1,16 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity } from "typeorm";
+import { EntitySchema } from "typeorm";
 
-@Entity()
-export class Log extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id;
-
-  @Column()
-  siteId;
-
-  @Column()
-  status;
-
-  @CreateDateColumn()
-  createdAt;
-} 
+export const Log = new EntitySchema({
+  name: 'Log',
+  tableName: 'logs',
+  columns: {
+    id: {
+      type: 'int',
+      primary: true,
+      generated: true
+    },
+    siteId: {
+      type: 'int',
+    },
+    status: {
+      type: 'varchar',
+      length: 255
+    },
+    createdAt: {
+      type: 'timestamp',
+      createDate: true
+    }
+  }
+}); 

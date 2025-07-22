@@ -1,19 +1,29 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
+import { EntitySchema  } from "typeorm";
 
-@Entity()
-export class Site extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id;
-
-  @Column()
-  name;
-
-  @Column()
-  url;
-
-  @Column({ default: '*/5 * * * *' })
-  cronInterval;
-
-  @Column({ default: true })
-  enabled;
-} 
+export const Site = new EntitySchema({
+  name: 'Site',
+  tableName: 'sites',
+  columns: {
+    id: {
+      type: 'int',
+      primary: true,
+      generated: true
+    },
+    name: {
+      type: 'varchar',
+      length: 255
+    },
+    url: {
+      type: 'varchar',
+      length: 500
+    },
+    cronInterval: {
+      type: 'varchar',
+      default: '*/5 * * * *'
+    },
+    enabled: {
+      type: 'boolean',
+      default: true
+    }
+  }
+});

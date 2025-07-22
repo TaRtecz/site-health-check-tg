@@ -1,13 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
+import { EntitySchema } from "typeorm";
 
-@Entity()
-export class SiteStatus extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id;
-
-  @Column()
-  siteId;
-
-  @Column()
-  isUp;
-} 
+export const SiteStatus = new EntitySchema({
+  name: 'SiteStatus',
+  tableName: 'site_statuses',
+  columns: {
+    id: {
+      type: 'int',
+      primary: true,
+      generated: true
+    },
+    siteId: {
+      type: 'int',
+    },
+    isUp: {
+      type: 'boolean',
+    }
+  }
+}); 
