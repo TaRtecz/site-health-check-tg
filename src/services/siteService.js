@@ -1,17 +1,26 @@
+import { AppDataSource } from "./db.js";
 import { Site } from "../entities/Site.js";
 import { SiteStatus } from "../entities/SiteStatus.js";
 import axios from "axios";
 
+function getSiteRepository() {
+  return AppDataSource.getRepository(Site);
+}
+
+function getSiteStatusRepository() {
+  return AppDataSource.getRepository(SiteStatus);
+}
+
 export async function getAllSites() {
-  return Site.find();
+  return getSiteRepository().find();
 }
 
 export async function getAllStatuses() {
-  return SiteStatus.find();
+  return getSiteStatusRepository().find();
 }
 
 export async function upsertStatus(siteId, isUp) {
-  return SiteStatus.upsert({ siteId, isUp }, ["siteId"]);
+  return getSiteStatusRepository().upsert({ siteId, isUp }, ["siteId"]);
 }
 
 export async function checkSite(site, cache) {
@@ -29,22 +38,24 @@ export async function checkSite(site, cache) {
 }
 
 export async function createSite({ name, url, cronInterval, enabled }) {
-  const site = Site.create({ name, url, cronInterval, enabled });
-  await site.save();
+  const repo = getSiteRepository();
+  const site = repo.create({ name, url, cronInterval, enabled });
+  await repo.save(site);
   return site;
 }
 
 export async function updateSite(id, { name, url, cronInterval, enabled }) {
-  const site = await Site.findOneBy({ id: Number(id) });
+  const repo = getSiteRepository();
+  const site = await repo.findOneBy({ id: Number(id) });
   if (!site) throw new Error("Site not found");
   if (name !== undefined) site.name = name;
   if (url !== undefined) site.url = url;
   if (cronInterval !== undefined) site.cronInterval = cronInterval;
   if (enabled !== undefined) site.enabled = enabled;
-  await site.save();
+  await repo.save(site);
   return site;
 }
 
 export async function deleteSite(id) {
-  await Site.delete({ id: Number(id) });
+  await getSiteRepository().delete({ id: Number(id) });
 } 
