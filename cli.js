@@ -8,6 +8,8 @@ import {
   updateSite,
   deleteSite,
 } from "./src/services/siteService.js";
+import { getAllLogs, getLogsBySite } from "./src/services/logService.js";
+import { getActiveCrons } from "./src/services/cronService.js";
 
 async function main() {
   await AppDataSource.initialize();
@@ -24,6 +26,8 @@ async function main() {
           { name: "Добавить сайт", value: "add" },
           { name: "Изменить сайт", value: "update" },
           { name: "Удалить сайт", value: "remove" },
+          { name: "Посмотреть логи", value: "logs" },
+          { name: "Посмотреть активные cron-задачи", value: "crons" },
           { name: "Выйти", value: "exit" },
         ],
       },
@@ -103,6 +107,77 @@ async function main() {
         ]);
         await deleteSite(siteToRemoveId);
         console.log("Сайт удалён!");
+        break;
+
+      case "logs":
+        const { logViewType } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "logViewType",
+            message: "Показать логи:",
+            choices: [
+              { name: "Все логи", value: "all" },
+              { name: "По сайту", value: "bySite" },
+            ],
+          },
+        ]);
+        if (logViewType === "all") {
+          const logs = await getAllLogs({ limit: 100 });
+          if (logs.length === 0) {
+            console.log("Логи отсутствуют.");
+          } else {
+            console.table(logs.map(l => ({
+              id: l.id,
+              siteId: l.siteId,
+              status: l.status,
+              createdAt: l.createdAt
+            })));
+          }
+        } else {
+          const sitesForLogs = await getAllSites();
+          if (sitesForLogs.length === 0) {
+            console.log("Нет сайтов для отображения логов.");
+            break;
+          }
+          const { siteIdForLogs } = await inquirer.prompt([
+            {
+              type: "list",
+              name: "siteIdForLogs",
+              message: "Выберите сайт:",
+              choices: sitesForLogs.map((s) => ({
+                name: `${s.name} (${s.url})`,
+                value: s.id,
+              })),
+            },
+          ]);
+          const logs = await getLogsBySite(siteIdForLogs, { limit: 100 });
+          if (logs.length === 0) {
+            console.log("Логи для этого сайта отсутствуют.");
+          } else {
+            console.table(logs.map(l => ({
+              id: l.id,
+              siteId: l.siteId,
+              status: l.status,
+              createdAt: l.createdAt
+            })));
+          }
+        }
+        break;
+
+      case "crons":
+        const crons = getActiveCrons();
+        if (crons.length === 0) {
+          console.log("Нет активных cron-задач.");
+        } else {
+          // Попробуем сопоставить siteId с именем сайта для удобства
+          const sites = await getAllSites();
+          const siteMap = Object.fromEntries(sites.map(s => [s.id, s.name]));
+          console.table(crons.map(c => ({
+            siteId: c.siteId,
+            siteName: siteMap[c.siteId] || '',
+            running: c.running ? 'Да' : 'Нет'
+          })));
+        }
         break;
 
       case "exit":

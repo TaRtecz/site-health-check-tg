@@ -20,8 +20,6 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection:", reason);
 });
 
-let siteStatusCache = {};
-
 function onStatusChange(site, isUp) {
   if (isUp) {
     sendUpMessage(site);
@@ -34,7 +32,7 @@ AppDataSource.initialize().then(async () => {
   // Инициализация крон-задач для всех сайтов
   const sites = await getAllSites();
   for (const site of sites) {
-    startCronForSite(site, site.cronInterval, siteStatusCache, async (site, isUp) => {
+    startCronForSite(site, site.cronInterval, async (site, isUp) => {
       await createLog({ siteId: site.id, status: isUp ? 'up' : 'down' });
       onStatusChange(site, isUp);
     });

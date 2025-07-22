@@ -11,6 +11,7 @@ export const SiteStatus = new EntitySchema({
     },
     siteId: {
       type: 'int',
+      unique: true
     },
     isUp: {
       type: 'boolean',

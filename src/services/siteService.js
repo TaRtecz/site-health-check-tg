@@ -15,6 +15,10 @@ export async function getAllSites() {
   return getSiteRepository().find();
 }
 
+export async function getSiteStatusById(id) {
+  return getSiteStatusRepository().findBy({ siteId:id });
+}
+
 export async function getAllStatuses() {
   return getSiteStatusRepository().find();
 }
@@ -23,8 +27,9 @@ export async function upsertStatus(siteId, isUp) {
   return getSiteStatusRepository().upsert({ siteId, isUp }, ["siteId"]);
 }
 
-export async function checkSite(site, cache) {
-  let wasUp = cache[site.url] !== false;
+export async function checkSite(site) {
+  const siteStatus = await getSiteStatusById(site.id)
+  const wasUp = siteStatus[0].isUp;
   let isUp = true;
   try {
     await axios.get(site.url, { timeout: 10000 });
@@ -32,8 +37,8 @@ export async function checkSite(site, cache) {
   } catch (e) {
     isUp = false;
   }
+  console.log(`Проверка сайта ${site.name} - ${site.url}. Статус - ${isUp}`);
   await upsertStatus(site.id, isUp);
-  cache[site.url] = isUp;
   return { isUp, wasUp };
 }
 

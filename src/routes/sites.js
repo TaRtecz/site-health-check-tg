@@ -1,11 +1,10 @@
 import express from "express";
-import { getAllSites, getAllStatuses, createSite, updateSite, deleteSite } from "../services/siteService.js";
+import { getAllSites, getAllStatuses, createSite, updateSite, deleteSite, getSiteStatusById } from "../services/siteService.js";
 import { startCronForSite, stopCronForSite, restartCronForSite } from "../services/cronService.js";
 import { sendUpMessage, sendDownMessage } from "../services/botService.js";
 import { getAllLogs, getLogsBySite } from "../services/logService.js";
 
 const router = express.Router();
-let siteStatusCache = {};
 
 function onStatusChange(site, isUp) {
   if (isUp) {
@@ -31,15 +30,21 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   const { name, url, cronInterval, enabled } = req.body;
   const site = await createSite({ name, url, cronInterval, enabled });
-  startCronForSite(site, site.cronInterval, siteStatusCache, onStatusChange);
+  startCronForSite(site, site.cronInterval, onStatusChange);
   res.status(201).json(site);
+});
+
+router.get("/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const site = await getSiteStatusById(id);
+  res.json(site);
 });
 
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { name, url, cronInterval, enabled } = req.body;
   const site = await updateSite(id, { name, url, cronInterval, enabled });
-  restartCronForSite(site, site.cronInterval, siteStatusCache, onStatusChange);
+  restartCronForSite(site, site.cronInterval, onStatusChange);
   res.json(site);
 });
 
