@@ -29,7 +29,7 @@ export async function upsertStatus(siteId, isUp) {
 
 export async function checkSite(site) {
   const siteStatus = await getSiteStatusById(site.id)
-  const wasUp = siteStatus[0].isUp;
+  const wasUp = siteStatus[0]?.isUp;
   let isUp = true;
   try {
     console.log('Проверка сайта >>>', site.url);
