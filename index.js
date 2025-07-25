@@ -38,7 +38,7 @@ AppDataSource.initialize().then(async () => {
     });
   }
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Web-интерфейс: http://localhost:${PORT}`);
   });
 });
