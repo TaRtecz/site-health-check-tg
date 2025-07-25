@@ -26,7 +26,7 @@ services:
       PORT: ${PORT}
       CHECK_INTERVAL_MINUTES: ${CHECK_INTERVAL_MINUTES}
     ports:
-      - "3000:3000"
+      - "80:80"
     restart: always
 volumes:
   pgdata: 
