@@ -16,31 +16,36 @@ export async function getAllSites() {
 }
 
 export async function getSiteStatusById(id) {
-  return getSiteStatusRepository().findBy({ siteId:id });
+  const site = await getSiteStatusRepository().findOneBy({ siteId:id });
+  if (!site) {
+    console.log('Не удалось найти сайт', id)
+    return
+  }
+  return site.isUp;
 }
 
 export async function getAllStatuses() {
   return getSiteStatusRepository().find();
 }
 
-export async function upsertStatus(siteId, isUp) {
+export async function setSiteStatus(siteId, isUp) {
   return getSiteStatusRepository().upsert({ siteId, isUp }, ["siteId"]);
 }
 
 export async function checkSite(site) {
-  const siteStatus = await getSiteStatusById(site.id)
-  const wasUp = siteStatus[0]?.isUp;
-  let isUp = true;
+  const oldSiteStatus = await getSiteStatusById(site.id);
   try {
-    console.log('Проверка сайта >>>', site.url);
-    await axios.get(site.url, { timeout: 10000 });
-    isUp = true;
+    const res = await axios.head(site.url, { timeout: 1000 });
+    console.log(`Проверка сайта ${site.name} - ${site.url}. Статус - ${res.status}`);
+    if (res.status === 200) {
+      return { currentStatus: true, oldSiteStatus };
+    } else {
+      return { currentStatus: false, oldSiteStatus };
+    }
   } catch (e) {
-    isUp = false;
+    console.log('Сайт не существует или недоступен');
+    return { currentStatus: false, oldSiteStatus };
   }
-  console.log(`Проверка сайта ${site.name} - ${site.url}. Статус - ${isUp}`);
-  await upsertStatus(site.id, isUp);
-  return { isUp, wasUp };
 }
 
 export async function createSite({ name, url, cronInterval, enabled }) {

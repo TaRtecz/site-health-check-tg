@@ -1,26 +1,79 @@
 import cron from "node-cron";
-import { checkSite } from "./siteService.js";
+import { AppDataSource } from "./db.js";
+import { checkSite, setSiteStatus } from "./siteService.js";
+import { sendUpMessage, sendDownMessage } from "./botService.js";
+import { Cron } from "../entities/Cron.js";
 
 // Храним задачи по siteId
 const cronJobs = {};
 
-export function startCronForSite(site, interval, onStatusChange) {
+function getCronRepository() {
+  return AppDataSource.getRepository(Cron);
+}
+
+export async function getAllCrons() {
+  return getCronRepository().find();
+}
+
+export async function getCronByStiteId(siteId) {
+  const cron = await getCronRepository().findOneBy({ siteId });
+  if (!cron) {
+    console.log('Не удалось найти cronJob для сайта', siteId)
+    return
+  }
+
+  return cron;
+}
+
+export async function updateIntervalCron(siteId, interval) {
+  return getCronRepository().upsert({ siteId, interval }, ["siteId"]);
+}
+
+export async function updateStatusCron(siteId, status) {
+  try {
+    const cronJob= await getCronByStiteId(siteId);
+    if (!cronJob) {
+      console.log('Не удалось найти cronJob для сайта', siteId)
+      return
+    }
+    return getCronRepository().upsert({ siteId, status }, ["siteId"]);
+  } catch {
+    console.log('Не удалось обновить статус для Cron задачи у сайта', siteId)
+  }
+}
+
+export async function createCron(siteId, cronInterval) {
+  const cronRepo = getCronRepository();
+  const cron = cronRepo.create({ siteId, status: 1, interval: cronInterval });
+  await cronRepo.save(cron);
+  return cron;
+}
+
+export async function startCronForSite(site) {
+  const cronJob = await getCronByStiteId(site.id);
+  
   if (!site.enabled) {
-    console.log(`Cron для ${site.name} отключен.`);
+    console.log(`Мониторинг для сайта - ${site.name} отключен.`);
     return;
   }
-  if (cronJobs[site.id]) {
-    cronJobs[site.id].stop();
+
+  if (!cronJob || cronJob.status !== 1) {
+    console.log('Крон для сайта отключен или отсутсвует')
+    return;
   }
-  // interval — строка cron, например '*/5 * * * *'
-  const job = cron.schedule(interval, async () => {
-    console.log('Выполняю крон');
-    const { isUp, wasUp } = await checkSite(site);
-    if (onStatusChange && isUp !== wasUp) {
-      onStatusChange(site, isUp);
+  const job = cron.schedule(cronJob.interval, async () => {
+    const { currentStatus, oldSiteStatus } = await checkSite(site);
+    
+    if (!oldSiteStatus && currentStatus) {
+      sendUpMessage(site)
+    } else if (oldSiteStatus && !currentStatus) {
+      sendDownMessage(site)
     }
+    // Обновляем статус сайта текущей проверки
+    setSiteStatus(site.id, currentStatus)
   });
-  cronJobs[site.id] = job;
+  
+  return job
 }
 
 export function stopCronForSite(siteId) {
@@ -30,9 +83,9 @@ export function stopCronForSite(siteId) {
   }
 }
 
-export function restartCronForSite(site, interval, onStatusChange) {
+export function restartCronForSite(site) {
   stopCronForSite(site.id);
-  startCronForSite(site, interval, onStatusChange);
+  startCronForSite(site);
 }
 
 export function stopAllCrons() {
@@ -40,10 +93,7 @@ export function stopAllCrons() {
   Object.keys(cronJobs).forEach(id => delete cronJobs[id]);
 }
 
-export function getActiveCrons() {
-  // Возвращаем массив с id и статусом (запущена или нет)
-  return Object.entries(cronJobs).map(([siteId, job]) => ({
-    siteId: Number(siteId),
-    running: job.getStatus && job.getStatus() === 'scheduled'
-  }));
-} 
+export async function getActiveCrons() {
+  const allCrons = await getAllCrons();
+  return allCrons.filter(cron => cron.status === 1)
+}

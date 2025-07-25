@@ -2,6 +2,7 @@ import { DataSource } from "typeorm";
 import { Site } from "../entities/Site.js";
 import { SiteStatus } from "../entities/SiteStatus.js";
 import { Log } from "../entities/Log.js";
+import { Cron } from "../entities/Cron.js";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -12,5 +13,5 @@ export const AppDataSource = new DataSource({
   database: process.env.POSTGRES_DB,
   synchronize: true,
   logging: false,
-  entities: [Site, SiteStatus, Log],
+  entities: [Site, SiteStatus, Log, Cron],
 }); 

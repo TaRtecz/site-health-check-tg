@@ -9,7 +9,7 @@ import {
   deleteSite,
 } from "./src/services/siteService.js";
 import { getAllLogs, getLogsBySite } from "./src/services/logService.js";
-import { getActiveCrons } from "./src/services/cronService.js";
+import { getActiveCrons, createCron } from "./src/services/cronService.js";
 
 async function main() {
   await AppDataSource.initialize();
@@ -27,6 +27,7 @@ async function main() {
           { name: "Изменить сайт", value: "update" },
           { name: "Удалить сайт", value: "remove" },
           { name: "Посмотреть логи", value: "logs" },
+          { name: "Создать cronJob для сайта", value: "createCronJob" },
           { name: "Посмотреть активные cron-задачи", value: "crons" },
           { name: "Выйти", value: "exit" },
         ],
@@ -165,7 +166,7 @@ async function main() {
         break;
 
       case "crons":
-        const crons = getActiveCrons();
+        const crons = await getActiveCrons();
         if (crons.length === 0) {
           console.log("Нет активных cron-задач.");
         } else {
@@ -175,9 +176,32 @@ async function main() {
           console.table(crons.map(c => ({
             siteId: c.siteId,
             siteName: siteMap[c.siteId] || '',
-            running: c.running ? 'Да' : 'Нет'
+            running: c.status === 1 ? 'Да' : 'Нет'
           })));
         }
+        break;
+
+      case "createCronJob":
+        const sitesToCreateCron = await getAllSites();
+        if (sitesToCreateCron.length === 0) {
+          console.log("Нет сайтов для создания cronJob.");
+          break;
+        }
+        const { siteIdToCreateCron } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "siteIdToCreateCron",
+            message: "Выберите сайт для создания задачи:",
+            choices: sitesToCreateCron.map((s) => ({
+              name: `${s.name} (${s.url}) — текущий интервал: ${s.cronInterval}`,
+              value: s.id,
+            })),
+          },
+        ]);
+        // Находим выбранный сайт, чтобы получить его интервал
+        const siteIntervalToCreateCron = sitesToCreateCron.find(site => site.id === siteIdToCreateCron);
+        await createCron(siteIdToCreateCron, siteIntervalToCreateCron.cronInterval);
+        console.log("Cron усешно создан!");
         break;
 
       case "exit":
