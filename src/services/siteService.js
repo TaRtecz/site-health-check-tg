@@ -32,6 +32,7 @@ export async function checkSite(site) {
   const wasUp = siteStatus[0].isUp;
   let isUp = true;
   try {
+    console.log('Проверка сайта >>>', site.url);
     await axios.get(site.url, { timeout: 10000 });
     isUp = true;
   } catch (e) {
