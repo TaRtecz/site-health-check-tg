@@ -36,7 +36,7 @@ export async function checkSite(site) {
   const oldSiteStatus = await getSiteStatusById(site.id);
   try {
     const res = await axios.head(site.url, { timeout: 1000 });
-    console.log(`Проверка сайта ${site.name} - ${site.url}. Статус - ${res.status}`);
+    console.log(`Проверка сайта ${site.name} - ${site.url}. Статус - ${res.status}. Дата: ${new Date()}`);
     if (res.status === 200) {
       return { currentStatus: true, oldSiteStatus };
     } else {
